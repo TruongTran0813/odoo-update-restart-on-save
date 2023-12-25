@@ -3,6 +3,7 @@
   "displayName": "odoo-update-restart-on-save",
   "description": "",
   "version": "0.0.1",
+  "publisher": "TruongTran0813",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -102,13 +103,19 @@
       }
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TruongTran0813/odoo-update-restart-on-save"
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package": "mkdirp dist && vsce package -o dist/ext.vsix --yarn",
+    "deploy:local": "yarn package && code --install-extension dist/ext.vsix --force"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",

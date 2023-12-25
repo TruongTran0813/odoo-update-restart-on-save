@@ -32,7 +32,7 @@ let odooStatusBar: StatusBarItem;
 let isLoading: boolean;
 async function checkOdooPath(context: ExtensionContext) {
   let currentConfig = getCurrentConfig(context);
-
+  if (!currentConfig) return;
   let odooFound = currentConfig
     ? workspace.getWorkspaceFolder(Uri.file(currentConfig.odooPath))
     : true;
@@ -129,7 +129,7 @@ function initializeSubscriptions(
   setStatusConfig(context, odooStatusBar);
   odooStatusBar.show();
   const currentConfig = getCurrentConfig(context);
-  extension.loadConfig();
+  currentConfig && extension.loadConfig();
   odooStatusBar.command = `odoo-update-restart-on-save.${
     currentConfig ? "openConfiguration" : "addConfiguration"
   }`;
