@@ -126,6 +126,7 @@ function initializeSubscriptions(
   extension: RunOnSaveExtExtension
 ): void {
   odooStatusBar = window.createStatusBarItem(StatusBarAlignment.Left, 100);
+  odooStatusBar.tooltip = "Odoo Update & Restart on Save @TruongTran0813";
   setStatusConfig(context, odooStatusBar);
   odooStatusBar.show();
   const currentConfig = getCurrentConfig(context);
