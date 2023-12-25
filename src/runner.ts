@@ -74,7 +74,7 @@ export class RunOnSaveExtExtension {
       "odoo-update-restart-on-save.configurations"
     ) as any;
     let modules: string[] = [];
-    for (const addonsPath of config.addons) {
+    for (const addonsPath of config?.addons) {
       const directoryUri = vscode.Uri.file(addonsPath);
 
       const children = await vscode.workspace.fs.readDirectory(directoryUri);
@@ -85,11 +85,11 @@ export class RunOnSaveExtExtension {
       );
     }
     this.config = {
-      addons: config.addons,
-      binPath: path.join(config.odooPath, "odoo-bin"),
-      configPath: path.join(config.odooPath, "odoo.conf"),
-      databaseName: config.name,
-      pythonPath: config.pythonPath,
+      addons: config?.addons,
+      binPath: path.join(config?.odooPath, "odoo-bin"),
+      configPath: path.join(config?.odooPath, "odoo.conf"),
+      databaseName: config?.name,
+      pythonPath: config?.pythonPath,
       modules: modules,
     };
   }
@@ -105,13 +105,19 @@ export class RunOnSaveExtExtension {
 
   public async runCommands(document: vscode.TextDocument): Promise<void> {
     this.showStatusMessage("Running on save commands...");
-    // build our commands by replacing parameters with values
-    const root = vscode.workspace.rootPath;
-    const relativeFile = "." + document.fileName.replace(root || "", "");
+    let moduleName: any = "";
+    for (const item of this.config.addons) {
+      const relativePath = path.relative(item, document.fileName);
+      let directoryName = path.dirname(relativePath);
+      directoryName = directoryName.split(path.sep)[0];
+      moduleName = this.config.modules.find(
+        (module) => module === directoryName
+      );
+      if (moduleName) {
+        break;
+      }
+    }
 
-    const moduleName = this.config.modules.find((module) =>
-      relativeFile.includes(module)
-    );
     const extName = path.extname(document.fileName);
     const isXmlJsCss = [".xml", ".js", ".css"].includes(extName);
     const isPyCsv = [".py", ".csv"].includes(extName);
@@ -127,9 +133,15 @@ export class RunOnSaveExtExtension {
       return;
     }
 
-    if (isXmlJsCss && moduleName) {
+    if (
+      this.checkModuleAndConfigExistence(moduleName) &&
+      moduleName &&
+      isXmlJsCss
+    ) {
       this.runInNewTerminal(moduleName);
-    } else vscode.commands.executeCommand("workbench.action.debug.restart");
+    } else {
+      vscode.commands.executeCommand("workbench.action.debug.restart");
+    }
   }
   public async updateModule(uri: vscode.Uri): Promise<void> {
     const filePath = uri.fsPath;
@@ -137,16 +149,31 @@ export class RunOnSaveExtExtension {
     const moduleName = this.config.modules.find(
       (module) => module === folderName
     );
+
+    this.checkModuleAndConfigExistence(moduleName) &&
+      moduleName &&
+      this.runInNewTerminal(moduleName);
+  }
+  private checkModuleAndConfigExistence(moduleName?: string): boolean {
     const valuesToCheck = [
-      this.config.pythonPath,
-      this.config.binPath,
-      this.config.configPath,
-      this.config.databaseName,
+      { value: moduleName, errorMessage: "Module not found!" },
+      { value: this.config.pythonPath, errorMessage: "Python path not found!" },
+      { value: this.config.binPath, errorMessage: "Bin path not found!" },
+      { value: this.config.configPath, errorMessage: "Config path not found!" },
+      {
+        value: this.config.databaseName,
+        errorMessage: "Database name not found!",
+      },
     ];
-    if (!moduleName || valuesToCheck.some((value) => !value)) {
-      this.showOutputMessage();
-      return;
+
+    for (let item of valuesToCheck) {
+      if (!item.value) {
+        vscode.window.showErrorMessage(item.errorMessage);
+        this.showOutputMessage();
+        return false;
+      }
     }
-    this.runInNewTerminal(moduleName);
+
+    return true;
   }
 }

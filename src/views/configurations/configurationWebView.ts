@@ -135,7 +135,7 @@ export class ConfigurationWebView {
       // If a webview panel already exists for a config ID, reveal it
       const panel = ConfigurationWebView.panels.get(configId)?._panel;
       if (panel) {
-        panel.reveal(vscode.ViewColumn.One);
+        panel.reveal(ViewColumn.One);
       }
     } else {
       // If a webview panel does not already exist create and show a new one
@@ -150,7 +150,7 @@ export class ConfigurationWebView {
         // Panel title
         `Odoo: ${configName}`,
         // The editor column the panel should be displayed in
-        vscode.ViewColumn.One,
+        ViewColumn.One,
         // Extra panel configurations
         {
           // Enable JavaScript in the webview

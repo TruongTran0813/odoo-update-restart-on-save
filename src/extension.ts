@@ -4,28 +4,17 @@ import { ConfigurationWebView } from "./views/configurations/configurationWebVie
 import {
   commands,
   ExtensionContext,
-  ExtensionMode,
-  QuickPickItem,
   StatusBarAlignment,
   StatusBarItem,
-  ThemeIcon,
   workspace,
   window,
-  QuickPickItemKind,
-  TextDocument,
-  OutputChannel,
   Uri,
 } from "vscode";
 import { getCurrentConfig } from "./utils/utils";
 import * as fs from "fs";
 import * as path from "path";
 
-import {
-  LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
-  integer,
-} from "vscode-languageclient/node";
+
 import { ConfigurationsChange } from "./utils/events";
 
 let odooStatusBar: StatusBarItem;
@@ -144,10 +133,10 @@ function initializeSubscriptions(
           "odoo-update-restart-on-save.configurations",
           {
             id: configId,
-            name: `New Configuration ${configId}`,
+            name: `Database name`,
             odooPath: "",
             addons: [],
-            pythonPath: "python3",
+            pythonPath: "python path",
           }
         );
 
