@@ -180,10 +180,18 @@ function initializeSubscriptions(
       } catch (error) {}
     })
   );
+  context.subscriptions.push(
+    commands.registerCommand(
+      "odoo-update-restart-on-save.updateModule",
+      (e: vscode.Uri) => {
+        extension.updateModule(e);
+      }
+    )
+  );
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  var extension = new RunOnSaveExtExtension(context);
+  const extension = new RunOnSaveExtExtension(context);
   extension.showOutputMessage();
   checkOdooPath(context);
   initializeSubscriptions(context, extension);

@@ -1,6 +1,6 @@
 {
   "name": "odoo-update-restart-on-save",
-  "displayName": "odoo-update-restart-on-save",
+  "displayName": "Odoo Update - Restart On Save",
   "description": "",
   "version": "0.0.1",
   "publisher": "TruongTran0813",
@@ -31,8 +31,20 @@
       {
         "command": "odoo-update-restart-on-save.clickStatusBar",
         "title": "Change Configuration"
+      },
+      {
+        "command": "odoo-update-restart-on-save.updateModule",
+        "title": "Update Module"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "odoo-update-restart-on-save.updateModule",
+          "when": "resourceScheme == file && resourceExtname == ''"
+        }
+      ]
+    },
     "configuration": {
       "title": "Save & Run command configuration.",
       "type": "object",
@@ -114,8 +126,8 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test",
-    "package": "mkdirp dist && vsce package -o dist/ext.vsix --yarn",
-    "deploy:local": "yarn package && code --install-extension dist/ext.vsix --force"
+    "package": "mkdirp dist && vsce package -o dist/odoo-update-restart-on-save.vsix --yarn",
+    "deploy:local": "yarn package && code --install-extension dist/odoo-update-restart-on-save.vsix --force"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",

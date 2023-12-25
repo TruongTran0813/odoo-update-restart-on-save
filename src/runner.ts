@@ -1,8 +1,6 @@
 import * as vscode from "vscode";
 import { exec } from "child_process";
 import * as path from "path";
-var ncp = require("copy-paste");
-var endOfLine = require("os").EOL;
 
 interface IConfig {
   pythonPath: string;
@@ -10,6 +8,7 @@ interface IConfig {
   configPath: string;
   databaseName: string;
   addons: string[];
+  modules: string[];
 }
 
 export class RunOnSaveExtExtension {
@@ -27,8 +26,10 @@ export class RunOnSaveExtExtension {
     );
   }
 
-  private runInNewTerminal(command: string, moduleName?: string) {
-    let child = exec(command);
+  private runInNewTerminal(moduleName: string) {
+    const cmd = `${this.config.pythonPath} ${this.config.binPath} -c ${this.config.configPath} -d ${this.config.databaseName} -u ${moduleName} --stop-after-init`;
+
+    let child = exec(cmd);
     const msg = "Updating Odoo module: " + moduleName + "...";
     this.showStatusMessage(msg);
 
@@ -68,16 +69,28 @@ export class RunOnSaveExtExtension {
     );
   }
 
-  public loadConfig(): void {
+  public async loadConfig(): Promise<void> {
     const config = this.context.globalState.get(
       "odoo-update-restart-on-save.configurations"
     ) as any;
+    let modules: string[] = [];
+    for (const addonsPath of config.addons) {
+      const directoryUri = vscode.Uri.file(addonsPath);
+
+      const children = await vscode.workspace.fs.readDirectory(directoryUri);
+      modules = modules.concat(
+        children
+          .filter(([name, type]) => type === vscode.FileType.Directory)
+          .map(([name, type]) => name)
+      );
+    }
     this.config = {
       addons: config.addons,
       binPath: path.join(config.odooPath, "odoo-bin"),
       configPath: path.join(config.odooPath, "odoo.conf"),
       databaseName: config.name,
       pythonPath: config.pythonPath,
+      modules: modules,
     };
   }
 
@@ -93,21 +106,13 @@ export class RunOnSaveExtExtension {
   public async runCommands(document: vscode.TextDocument): Promise<void> {
     this.showStatusMessage("Running on save commands...");
     // build our commands by replacing parameters with values
-    var root = vscode.workspace.rootPath;
-    var relativeFile = "." + document.fileName.replace(root || "", "");
-    let modules: string[] = [];
-    for (const addonsPath of this.config.addons) {
-      const directoryUri = vscode.Uri.file(addonsPath);
+    const root = vscode.workspace.rootPath;
+    const relativeFile = "." + document.fileName.replace(root || "", "");
 
-      const children = await vscode.workspace.fs.readDirectory(directoryUri);
-      modules = modules.concat(
-        children
-          .filter(([name, type]) => type === vscode.FileType.Directory)
-          .map(([name, type]) => name)
-      );
-    }
-    var moduleName = modules.find((module) => relativeFile.includes(module));
-    var extName = path.extname(document.fileName);
+    const moduleName = this.config.modules.find((module) =>
+      relativeFile.includes(module)
+    );
+    const extName = path.extname(document.fileName);
     const isXmlJsCss = [".xml", ".js", ".css"].includes(extName);
     const isPyCsv = [".py", ".csv"].includes(extName);
     const valuesToCheck = [
@@ -122,9 +127,26 @@ export class RunOnSaveExtExtension {
       return;
     }
 
-    if (isXmlJsCss) {
-      const cmd = `${this.config.pythonPath} ${this.config.binPath} -c ${this.config.configPath} -d ${this.config.databaseName} -u ${moduleName} --stop-after-init`;
-      this.runInNewTerminal(cmd, moduleName);
+    if (isXmlJsCss && moduleName) {
+      this.runInNewTerminal(moduleName);
     } else vscode.commands.executeCommand("workbench.action.debug.restart");
+  }
+  public async updateModule(uri: vscode.Uri): Promise<void> {
+    const filePath = uri.fsPath;
+    const folderName = path.basename(filePath);
+    const moduleName = this.config.modules.find(
+      (module) => module === folderName
+    );
+    const valuesToCheck = [
+      this.config.pythonPath,
+      this.config.binPath,
+      this.config.configPath,
+      this.config.databaseName,
+    ];
+    if (!moduleName || valuesToCheck.some((value) => !value)) {
+      this.showOutputMessage();
+      return;
+    }
+    this.runInNewTerminal(moduleName);
   }
 }

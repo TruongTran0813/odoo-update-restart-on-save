@@ -174,25 +174,25 @@ export class ConfigurationWebView {
     let changes = [];
     let oldAddons = config["addons"];
 
-    if (config["odooPath"] != odooPath) {
+    if (config["odooPath"] !== odooPath) {
       changes.push("odooPath");
     }
 
-    if (config["name"] != name) {
+    if (config["name"] !== name) {
       changes.push("name");
     }
 
-    if (config["pythonPath"] != pythonPath) {
+    if (config["pythonPath"] !== pythonPath) {
       changes.push("pythonPath");
     }
 
-    if (oldAddons.length != addons.length) {
+    if (oldAddons.length !== addons.length) {
       changes.push("addons");
     } else {
       oldAddons.sort();
       addons.sort();
       for (let i = 0; i < oldAddons.length; i++) {
-        if (oldAddons[i] != addons[i]) {
+        if (oldAddons[i] !== addons[i]) {
           changes.push("addons");
           break;
         }
@@ -214,6 +214,54 @@ export class ConfigurationWebView {
 
     if (changes.includes("name")) {
       this._updateWebviewTitle(this._panel, name);
+    }
+    this._createLaunchJsonFile(config);
+  }
+  private async _createLaunchJsonFile(config: any) {
+    const version = this.getConfigurations("configsVersion");
+    const launchConfig = {
+      version: "0.2.0",
+      configurations: [
+        {
+          name: `Odoo - ${version}`,
+          type: "python",
+          request: "launch",
+          justMyCode: true,
+          stopOnEntry: false,
+          python: config["pythonPath"],
+          console: "integratedTerminal",
+          program: "${workspaceRoot}\\odoo-bin",
+          args: [
+            "--config=${workspaceRoot}\\odoo.conf",
+            `--database=${config["name"]}`,
+          ],
+          cwd: "${workspaceRoot}",
+        },
+      ],
+    };
+
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (workspaceFolder) {
+      const launchJsonPath = vscode.Uri.joinPath(
+        workspaceFolder.uri,
+        ".vscode",
+        "launch.json"
+      );
+      const launchJsonContent = JSON.stringify(launchConfig, null, 2);
+
+      try {
+        await vscode.workspace.fs.writeFile(
+          launchJsonPath,
+          Buffer.from(launchJsonContent)
+        );
+        vscode.window.showInformationMessage(
+          "launch.json file created successfully."
+        );
+      } catch (error) {
+        vscode.window.showErrorMessage("Failed to create launch.json file.");
+      }
+    } else {
+      vscode.window.showErrorMessage("No workspace folder found.");
     }
   }
   private _updateWebviewTitle(panel: WebviewPanel, title: string) {
@@ -325,7 +373,10 @@ export class ConfigurationWebView {
       rl.on("close", () => {
         // Folder is invalid if we don't find any version info
         if (!versionString) {
-          this._context.globalState.update("Odoo.configsVersion", null);
+          this._context.globalState.update(
+            "odoo-update-restart-on-save.configsVersion",
+            null
+          );
           webview.postMessage({
             command: "update_config_folder_validity",
             version: null,
@@ -340,7 +391,10 @@ export class ConfigurationWebView {
             (versionArray[3] == "FINAL"
               ? ""
               : ` ${versionArray[3]}${versionArray[4]}`);
-          this._context.globalState.update("Odoo.configsVersion", version);
+          this._context.globalState.update(
+            "odoo-update-restart-on-save.configsVersion",
+            version
+          );
           webview.postMessage({
             command: "update_config_folder_validity",
             version: version,
@@ -349,7 +403,10 @@ export class ConfigurationWebView {
       });
     } else {
       // Folder is invalid if odoo/release.py was never found
-      this._context.globalState.update("Odoo.configsVersion", null);
+      this._context.globalState.update(
+        "odoo-update-restart-on-save.configsVersion",
+        null
+      );
       webview.postMessage({
         command: "update_config_folder_validity",
         version: null,
