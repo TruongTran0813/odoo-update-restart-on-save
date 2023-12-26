@@ -27,7 +27,7 @@ export class RunOnSaveExtExtension {
   }
 
   private runInNewTerminal(moduleName: string) {
-    const cmd = `${this.config.pythonPath} ${this.config.binPath} -c ${this.config.configPath} -d ${this.config.databaseName} -u ${moduleName} --stop-after-init`;
+    const cmd = `"${this.config.pythonPath}" "${this.config.binPath}" -c "${this.config.configPath}" -d "${this.config.databaseName}" -u "${moduleName}" --stop-after-init`;
 
     let child = exec(cmd);
     const msg = "Updating Odoo module: " + moduleName + "...";
@@ -50,6 +50,7 @@ export class RunOnSaveExtExtension {
 
         child.stderr?.on("data", (data) => {
           console.error(`stderr: ${data}`);
+          vscode.window.showErrorMessage(data);
         });
 
         child.on("close", (code) => {

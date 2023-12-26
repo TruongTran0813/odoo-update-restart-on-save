@@ -1,7 +1,7 @@
 {
   "name": "odoo-update-restart-on-save",
   "displayName": "Odoo Update - Restart On Save",
-  "description": "",
+  "description": "Automatically updates and restarts server upon saving changes, tailored to expedite and simplify Odoo application development.",
   "version": "0.0.1",
   "publisher": "TruongTran0813",
   "icon": "images/icon.png",
