@@ -15,6 +15,7 @@ import { URI } from "vscode-languageclient";
 import * as readline from "readline";
 
 import os from "node:os";
+import path from "path";
 const homeDirectory = os.homedir();
 export default function untildify(pathWithTilde: string) {
   if (typeof pathWithTilde !== "string") {
@@ -219,6 +220,8 @@ export class ConfigurationWebView {
   }
   private async _createLaunchJsonFile(config: any) {
     const version = this.getConfigurations("configsVersion");
+    const binPath = path.join(config?.odooPath, "odoo-bin");
+    const configPath = path.join(config?.odooPath, "odoo.conf");
     const launchConfig = {
       version: "0.2.0",
       configurations: [
@@ -228,13 +231,10 @@ export class ConfigurationWebView {
           request: "launch",
           justMyCode: true,
           stopOnEntry: false,
-          python: config["pythonPath"],
+          python: config.pythonPath,
           console: "integratedTerminal",
-          program: "${workspaceRoot}\\odoo-bin",
-          args: [
-            "--config=${workspaceRoot}\\odoo.conf",
-            `--database=${config["name"]}`,
-          ],
+          program: binPath,
+          args: [`--config=${configPath}`, `--database=${config.name}`],
           cwd: "${workspaceRoot}",
         },
       ],
