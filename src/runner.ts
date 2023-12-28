@@ -49,8 +49,70 @@ export class RunOnSaveExtExtension {
         });
 
         child.stderr?.on("data", (data) => {
-          console.error(`stderr: ${data}`);
-          vscode.window.showErrorMessage(data);
+          if (data.includes("ERROR")) {
+            console.error(`stderr: ${data}`);
+            vscode.window
+              .showErrorMessage("Module update failed", ...["View Error"])
+              .then((selection) => {
+                if (selection === "View Error") {
+                  const panel = vscode.window.createWebviewPanel(
+                    "errorDetails",
+                    "Error Details",
+                    vscode.ViewColumn.One,
+                    {}
+                  );
+                  const escapedData = data.replace(
+                    /[&<>'"]/g,
+                    (tag: string) =>
+                      ({
+                        "&": "&amp;",
+                        "<": "&lt;",
+                        ">": "&gt;",
+                        "'": "&#39;",
+                        '"': "&quot;",
+                      }[tag])
+                  );
+                  panel.webview.html = `
+                    <html>
+                      <head>
+                        <style>
+                          body {
+                            font-family: Arial, sans-serif;
+                          }
+                          div {
+                            flex: 1 1 auto;
+                            min-height: 0;
+                            overflow: auto;
+                            clear: both;
+                            color: #721c24;
+                            background-color: #f8d7da;
+                            border-color: #f5c6cb;
+                            position: relative;
+                            padding: 0.75rem 1.25rem;
+                            margin-bottom: 1rem;
+                            border: 1px solid transparent;
+                            border-radius: 3px;
+                          }
+                          pre {
+                            background-color: #f8d7da;
+                            padding: 10px;
+                            display: block;
+                            font-size: 95%;
+                            color: #212529;
+                          }
+                        </style>
+                      </head>
+                      <body>
+                        <h1>Error Details</h1>
+                        <div>
+                          <pre>${escapedData}</pre>
+                        </div>
+                      </body>
+                    </html>
+                  `; // Set the HTML content of the webview.
+                }
+              });
+          }
         });
 
         child.on("close", (code) => {
