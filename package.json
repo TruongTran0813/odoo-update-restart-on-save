@@ -23,7 +23,11 @@
       },
       {
         "command": "odoo-update-restart-on-save.updateModule",
-        "title": "Update Module"
+        "title": "Update Module",
+        "icon": {
+          "light": "images/icon.png",
+          "dark": "images/icon.png"
+        }
       }
     ],
     "menus": {
@@ -31,6 +35,12 @@
         {
           "command": "odoo-update-restart-on-save.updateModule",
           "when": "resourceScheme == file && resourceExtname == ''"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "odoo-update-restart-on-save.updateModule",
+          "group": "navigation@20"
         }
       ]
     }

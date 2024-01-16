@@ -14,7 +14,6 @@ import { getCurrentConfig } from "./utils/utils";
 import * as fs from "fs";
 import * as path from "path";
 
-
 import { ConfigurationsChange } from "./utils/events";
 
 let odooStatusBar: StatusBarItem;
@@ -116,6 +115,7 @@ function initializeSubscriptions(
 ): void {
   odooStatusBar = window.createStatusBarItem(StatusBarAlignment.Left, 100);
   odooStatusBar.tooltip = "Odoo Update & Restart on Save @TruongTran0813";
+
   setStatusConfig(context, odooStatusBar);
   odooStatusBar.show();
   const currentConfig = getCurrentConfig(context);

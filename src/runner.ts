@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { exec } from "child_process";
 import * as path from "path";
-
+import * as fs from "fs";
 interface IConfig {
   pythonPath: string;
   binPath: string;
@@ -182,8 +182,8 @@ export class RunOnSaveExtExtension {
     }
 
     const extName = path.extname(document.fileName);
-    const isXmlJsCss = [".xml", ".js", ".css"].includes(extName);
-    const isPyCsv = [".py", ".csv"].includes(extName);
+    const isXmlJsCss = [".xml"].includes(extName);
+    const isPyCsv = [".py", ".csv", ".js", ".css"].includes(extName);
     const valuesToCheck = [
       moduleName,
       this.config.pythonPath,
@@ -206,9 +206,30 @@ export class RunOnSaveExtExtension {
       vscode.commands.executeCommand("workbench.action.debug.restart");
     }
   }
+  async getFolderName(uri: vscode.Uri): Promise<string | undefined> {
+    let folderName: string | undefined = undefined;
+    return new Promise((resolve, reject) => {
+      fs.stat(uri.fsPath, (err, stats) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        if (stats.isFile()) {
+          const directoryName = path.dirname(uri.fsPath);
+          folderName = this.config.modules.find((module) =>
+            directoryName.includes(module)
+          );
+        } else if (stats.isDirectory()) {
+          folderName = path.basename(uri.fsPath);
+        }
+        resolve(folderName);
+      });
+      return folderName;
+    });
+  }
   public async updateModule(uri: vscode.Uri): Promise<void> {
-    const filePath = uri.fsPath;
-    const folderName = path.basename(filePath);
+    const folderName = await this.getFolderName(uri);
     const moduleName = this.config.modules.find(
       (module) => module === folderName
     );
