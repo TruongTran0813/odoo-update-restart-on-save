@@ -122,6 +122,7 @@ export class RunOnSaveExtExtension {
             message: "Odoo module: " + moduleName + " updated!",
           });
           this.showStatusMessage("Odoo module: " + moduleName + " updated!");
+          this.hotReload();
         });
 
         return new Promise((resolve, reject) => {
@@ -259,5 +260,14 @@ export class RunOnSaveExtExtension {
     }
 
     return true;
+  }
+
+  private async hotReload(): Promise<void> {
+    fetch("http://localhost:8069/api/hot_reload/reload")
+      .then((response) => response.text())
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((error) => console.log("error", error));
   }
 }
