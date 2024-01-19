@@ -234,7 +234,11 @@ export class ConfigurationWebView {
           python: config.pythonPath,
           console: "integratedTerminal",
           program: binPath,
-          args: [`--config=${configPath}`, `--database=${config.name}`],
+          args: [
+            `--config=${configPath}`,
+            `--database=${config.name}`,
+            `--dev=all`,
+          ],
           cwd: "${workspaceRoot}",
         },
       ],

@@ -183,8 +183,8 @@ export class RunOnSaveExtExtension {
     }
 
     const extName = path.extname(document.fileName);
-    const isXmlJsCss = [".xml"].includes(extName);
-    const isPyCsv = [".py", ".csv", ".js", ".css"].includes(extName);
+    const isXmlJsCss = [".xml", ".js", ".css"].includes(extName);
+    const isPyCsv = [".py", ".csv"].includes(extName);
     const valuesToCheck = [
       moduleName,
       this.config.pythonPath,
@@ -202,7 +202,7 @@ export class RunOnSaveExtExtension {
       moduleName &&
       isXmlJsCss
     ) {
-      this.runInNewTerminal(moduleName);
+      this.hotReload();
     } else {
       vscode.commands.executeCommand("workbench.action.debug.restart");
     }
